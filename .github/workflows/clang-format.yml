@@ -17,10 +17,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      # TODO(mblaha) remove this step when dnf-ci-host image is used again
       - name: Install clang-tools-extra and git
         run: |
-          # TODO(mblaha) remove clang-tools-extra and git installation once
-          # dnf-ci-host image is used again
           dnf install -y git clang-tools-extra
 
       - name: Rebase the pull request on target branch
@@ -35,7 +34,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           echo "Rebasing \"`git log --oneline -1`\" on ${{github.event.pull_request.base.ref}}: \"`git log --oneline -1 origin/${{github.event.pull_request.base.ref}}`\""
-          git rebase origin/${{github.event.pull_request.base.ref}}
+          #git rebase origin/${{github.event.pull_request.base.ref}}
 
       - name: Run Clang Format
         run: |
