@@ -12,15 +12,15 @@ jobs:
     # change back to ghcr.io/rpm-software-management/dnf-ci-host when fixed
     container: registry.fedoraproject.org/fedora:35
     steps:
-      - name: Check out sources
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
       # TODO(mblaha) remove this step when dnf-ci-host image is used again
       - name: Install clang-tools-extra and git
         run: |
           dnf install -y git clang-tools-extra
+
+      - name: Check out sources
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Rebase the pull request on target branch
         run: |
