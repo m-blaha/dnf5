@@ -1,0 +1,46 @@
+name: weblate-sync-pot
+on:
+  schedule:
+    # Run this every morning
+    - cron: '45 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  pot-upload:
+    name: Upload *.pot files to dnf5-l10n repository
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rpm-software-management/dnf-ci-host
+      options: --user root
+    timeout-minutes: 10
+    steps:
+      # https://github.blog/2022-04-12-git-security-vulnerability-announced/
+      - name: Pacify git's permission check
+        run: git config --global --add safe.directory /__w/
+
+      - name: Clone source repository
+        uses: actions/checkout@v4
+        with:
+          path: src
+          fetch-depth: 1
+
+      - name: Generate .pot files
+        run: |
+          cd src
+          cmake -S . -B build
+          cmake --build build --target gettext-potfiles
+
+      - name: Clone weblate repository
+        uses: actions/checkout@v3
+        with:
+          path: l10n
+          repository: ${{ github.repository }}-l10n
+          ssh-key: ${{ secrets.L10N_KEY }}
+
+      - name: Commit .pot to weblate repo
+        run: |
+          cp src/libdnf5/po/libdnf5.pot weblate/libdnf5/libdnf5.pot
+          git config --global user.name "GitHub Workflow"
+          git config --global user.email "mblaha@redhat.com"
+          git -C weblate commit -m "Update source file" -- libdnf5/libdnf5.pot
+          git -C weblate push
