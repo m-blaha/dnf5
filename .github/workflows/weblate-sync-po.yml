@@ -1,0 +1,69 @@
+name: Weblate - retrieve translations
+on:
+  schedule:
+    # Run every monday morning
+    - cron: '30 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  po-refresh:
+    name: Retrieve *.po files from dnf5-l10n repository
+    environment: self
+    permissions:
+      pull-requests: write
+      statuses: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone source repository
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.L10N_SSH_KEY }}
+          path: src
+
+      - name: Clone weblate repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}-l10n
+          path: l10n
+
+      - name: Get branche name
+        id: branch-name
+        run: echo "BRANCH_NAME=weblate-sync-$(date +"%Y-%m-%d-%H-%M-%S")" >> $GITHUB_OUTPUT
+
+      - name: Prepare a new branch
+        run: git -C src checkout -b ${{ steps.branch-name.outputs.BRANCH_NAME }}
+
+      - name: Copy .po files from weblate repository
+        run: |
+          pushd l10n
+          for component in $(find . -mindepth 1 -maxdepth 1 -type d -not -path './.*'); do
+            source_path=""
+            if [ -f "${component}/PATH" ]; then
+              read -r source_path < "${component}/PATH"
+              for po in "${component}"/*.po; do
+                if [ -f "$po" ]; then
+                  cp "${po}" "../src/${source_path}/"
+                fi
+              done
+            fi
+          done
+          popd
+
+      - name: Create a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global user.name "GitHub Workflow"
+          git config --global user.email "mblaha@redhat.com"
+          pushd src
+          git remote add l10n git@github.com:rpmsoftwaremanagement-l10n/dnf5.git
+          git remote -v
+          touch XXX
+          git add "*"
+          git commit -m "Update translations from Fedora Weblate"
+          git push -u l10n ${{ steps.branch-name.outputs.BRANCH_NAME }}
+          #git push origin ${{ steps.branch-name.outputs.BRANCH_NAME }}
+          #gh pr create -B main --head ${{ steps.branch-name.outputs.BRANCH_NAME }} --title 'Update translations from Fedora Weblate' --body 'Created by Github action'
+          gh repo set-default origin/dnf5
+          gh pr create --title 'Update translations from Fedora Weblate' --body 'Created by Github action'
+          popd
