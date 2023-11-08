@@ -36,7 +36,7 @@ jobs:
       - name: Commit .pot to weblate repo
         run: |
           git config --global user.name "GitHub Workflow"
-          git config --global user.email "mblaha@redhat.com"
+          git config --global user.email "github-actions@github.com"
           pushd src
           for f in $(find * -type f -name "*.pot"); do
             potfile=$(basename $f)
