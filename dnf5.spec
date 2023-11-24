@@ -1,6 +1,6 @@
 %global project_version_major 6
 %global project_version_minor 6
-%global project_version_patch 6
+%global project_version_patch 7
 
 %bcond dnf5_obsoletes_dnf %[0%{?fedora} > 40 || 0%{?rhel} > 10]
 
@@ -755,6 +755,9 @@ ln -sr %{buildroot}%{_bindir}/dnf5 %{buildroot}%{_bindir}/microdnf
 %ldconfig_scriptlets
 
 %changelog
+* Fri Nov 24 2023 Packit Team <hello@packit.dev> - 6.6.7-1
+- New upstream release 6.6.7
+
 * Fri Nov 24 2023 Packit Team <hello@packit.dev> - 6.6.6-1
 - New upstream release 6.6.6
 
