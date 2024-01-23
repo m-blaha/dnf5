@@ -89,7 +89,7 @@ class DistroSyncTest(support.InstallrootCase):
 
         self.iface_goal.do_transaction(dbus.Dictionary({}, signature='sv'))
 
-    def test_distr_sync_fromrepo(self):
+    def test_distro_sync_fromrepo(self):
         '''
         attempt to distro-sync/upgrade package from repo that does not contain it returns
         empty transaction
@@ -99,7 +99,7 @@ class DistroSyncTest(support.InstallrootCase):
         resolved, result = self.iface_goal.resolve(
             dbus.Dictionary({}, signature='sv'))
 
-        self.assertEqual(result, 1)
+        self.assertEqual(result, 2)
         self.assertEqual(
             resolved,
             dbus.Array([

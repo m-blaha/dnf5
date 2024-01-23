@@ -99,7 +99,7 @@ class DowngradeTest(support.InstallrootCase):
         resolved, result = self.iface_goal.resolve(
             dbus.Dictionary({}, signature='sv'))
 
-        self.assertEqual(result, 1)
+        self.assertEqual(result, 2)
         self.assertCountEqual(
             resolved,
             dbus.Array([
