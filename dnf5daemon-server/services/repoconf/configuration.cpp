@@ -37,7 +37,11 @@ void Configuration::read_main_config() {
     auto & logger = *session.get_base()->get_logger();
     auto base = session.get_base();
     auto & cfg_main = base->get_config();
-    auto main_config_path = cfg_main.get_config_file_path_option().get_value();
+    std::filesystem::path main_config_path{cfg_main.get_config_file_path_option().get_value()};
+    if (!cfg_main.get_use_host_config_option().get_value()) {
+        const std::filesystem::path installroot_path{cfg_main.get_installroot_option().get_value()};
+        main_config_path = installroot_path / main_config_path.relative_path();
+    }
 
     try {
         // create new main config parser and read the config file
@@ -51,7 +55,7 @@ void Configuration::read_main_config() {
         // store the parser so it can be used for saving the config file later on
         config_parsers[std::move(main_config_path)] = std::move(main_parser);
     } catch (const std::exception & e) {
-        logger.warning("Error parsing config file \"{}\": {}", main_config_path, e.what());
+        logger.warning("Error parsing config file \"{}\": {}", main_config_path.string(), e.what());
     }
 }
 
