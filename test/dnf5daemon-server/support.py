@@ -72,9 +72,7 @@ class InstallrootCase(unittest.TestCase):
             dbus_interface=IFACE_SESSION_MANAGER)
         self.session = self.iface_session.open_session({
             "config": {
-                "config_file_path": self.config_file_path,
                 "installroot": self.installroot,
-                "cachedir": os.path.join(self.installroot, "var/cache/dnf"),
                 "reposdir": self.reposdir,
             }
         })
