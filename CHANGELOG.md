@@ -1,3 +1,70 @@
+# 5.2.16.0
+
+- Update translations from weblate
+- Bump minor version to 5.2.16
+- dnfdaemon: Enable download-only transaction execution
+- dnfdaemon: Make it possible to set 'interactive' option for Rpm::system_upgrade()
+- dnfdaemon: Make it possible to set 'interactive' option for Offline::cancel(), Offline::clean(), Offline::set_finish_action()
+- dnfdaemon: Make it possible to set 'interactive' option for Repo::confirm_key(), Repo::enable(), Repo::disable()
+- dnfdaemon: Make it possible to set 'interactive' option for Goal::do_transaction()
+- dnfdaemon: Make it possible to set 'interactive' option for Base::clean()
+- test: Add test for temp files toml with missing key
+- repo: Do not fail on empty temporary files toml
+- actions: Replace L10N_SSH_KEY secret with RSM CI GitHub token
+- dnf5: Support --installed-from-repo= for "do"
+- Disable fastest_mirror callback for package downloading
+- Copy return value from `SetConstIterator::operator*`
+- tests: verify `SetConstIterator` works in Python bindings
+- test_nevra.py: change formatting to satisfy autopep8
+- Fix various typos found by Lintian
+- tests: fix compat with dash and other shellcheck warnings
+- dnf5: Support --installed-from-repo= for swap
+- dnf5: Support --installed-from-repo= for upgrade/downgrade/distro-sync
+- Goal: add_rpm_(upgrade/distro_sync) Improve support from_repo_ids
+- Goal: Honor set_from_repo_ids in add_up_down_distrosync_to_goal
+- dnf5: Support --installed-from-repo= for reinstall/remove
+- Goal: Honor set_from_repo_ids in add_(remove,reinstall)_to_goal
+- dnf5: Support --installed-from-repo= for repoquery/list/info
+- rpm::PackageQuery: New filter "filter_from_repo_id"
+- dnf5: "--from-repo=" option enables and validates source repositories
+- Goal::Impl::add_install_to_goal: Fix to_repo_ids handling
+- dnf5: upgrade/distro-sync: Apply --from-repo only if pkgs are specified
+- Goal::Impl::add_specs_to_goal: Skip processing of empty query in *ALL*
+- Goal::Impl::add_specs_to_goal: Apply to_repo_ids settings in *ALL*
+- Add unit tests for nevra parsing
+- swig: Add bindings for templated functions that convert nevra to string
+
+# 5.2.15.0
+
+- Update translations from weblate
+- Adapt missing gpg key check for parallel downloading
+- repoclosure: skip rich dependencies
+- search: Do not separate a package from a summary with a colon
+- Fix: add_up_down_distrosync_to_goal: to_repo_ids filtering
+- dnf5: distro-sync: Argument "--from-repo"
+- swig: Add %thread directive for repo_sack.hpp for Python
+- dnfdaemon: Fix a crash under dnf5daemon::DownloadCB::create_signal_download()
+- Add dnf5daemon-server requirement for polkit subpkg
+- doc: Correct handling the translations
+- dnfdaemon-client: Call server methods asynchronously
+- offline: Require D-Bus socket service from dnf5-offline-transaction.service
+- offline: Perform gracefull powerof/reboot instead of immediate one
+- readthedocs: add swig include to fix doc builds
+- readthedocs: extract `SOURCE_DIR` variable
+- readthedocs: fix path joining
+- dnfdaemon: Make permission check more consistent
+- dnfdaemon: Removed incorrect output parameter names
+- dnfdaemon: support all_advisories option for recent_changes()
+- advisory: Add support for filtering advisories by Nevra
+- dnfdaemon: support installonly pkgs in recent_changes()
+- dnfdaemon: Add new History interface
+- dnf5: repoclosure: Support globs in "--check=" option
+- doc: Handling translations
+- Docs: enhance install command behavior description
+- Unify commands help with package specs
+- Introduce new format denoting package spec formats
+- test: ease path assertions in tests
+
 # 5.2.14.0
 
 - Update translations from weblate
@@ -800,7 +867,7 @@
 - dnfdaemon: Missing signal registration
 - doc: config manager plugin: wrap too long lines
 - doc: document config-manager plugin
-- Packit: get version from specfile for copr_builds againts main
+- Packit: get version from specfile for copr_builds against main
 - Update tests to use new `load_repos()` API
 - Use new load_repos instead of deprecated update_and_load_enabled_repos
 - Make `libdnf5::repo::Repo::load()` private

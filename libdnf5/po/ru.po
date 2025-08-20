@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-19 03:39+0000\n"
+"POT-Creation-Date: 2025-07-26 03:48+0000\n"
 "PO-Revision-Date: 2024-09-19 09:54+0000\n"
 "Last-Translator: Aleksey Fedorov <aleksejfedorov963@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/dnf5/"
@@ -27,12 +27,12 @@ msgstr ""
 "Плохой идентификатор libsolv для рекомендации \"{}\", имя решаемой задачи "
 "\"{}\" не имеет префикса рекомендации \"{}\""
 
-#: base/goal.cpp:472
+#: base/goal.cpp:482
 msgid "Unsupported argument for REMOVE action: {}"
 msgstr "Неподдерживаемый аргумент для действия REMOVE: {}"
 
 #. TODO(lukash) throw a proper exception
-#: base/goal.cpp:1641
+#: base/goal.cpp:1652
 msgid "Incorrect configuration value for multilib_policy: {}"
 msgstr "Неверное значение конфигурации для multilib_policy: {}"
 
@@ -647,30 +647,30 @@ msgstr "Сбой импорта публичного ключа."
 msgid "Invalid tsflag: {}"
 msgstr "Недопустимый tsflag: {}"
 
-#: base/transaction.cpp:1318
+#: base/transaction.cpp:1314
 msgid "Public key \"{}\" is already present, not importing."
 msgstr "Публичный ключ \"{}\" уже присутствует, не импортируется."
 
-#: base/transaction.cpp:1339
+#: base/transaction.cpp:1335
 msgid "An error occurred importing key \"{}\": {}"
 msgstr "Произошла ошибка при импорте ключа \"{}\": {}"
 
-#: base/transaction.cpp:1373
+#: base/transaction.cpp:1369
 #, fuzzy
 #| msgid "PGP check for package \"{}\" ({}) from repo \"{}\" has failed: "
 msgid "OpenPGP check for package \"{}\" ({}) from repo \"{}\" has failed: "
 msgstr "Сбой проверки PGP для пакета \"{}\" ({}) из репозитория \"{}\": "
 
-#: base/transaction.cpp:1401
+#: base/transaction.cpp:1397
 msgid "Import of the key didn't help, wrong key?"
 msgstr "Импорт ключа не помог, неправильный ключ?"
 
-#: base/transaction.cpp:1420
+#: base/transaction.cpp:1416
 msgctxt "It is a joining character for repositories IDs"
 msgid ", "
 msgstr ", "
 
-#: base/transaction.cpp:1423
+#: base/transaction.cpp:1419
 #, fuzzy
 #| msgid "Warning: skipped PGP checks for {0} packages from repository: {1}"
 #| msgid_plural ""
@@ -685,7 +685,7 @@ msgstr[1] ""
 msgstr[2] ""
 "Предупреждение: пропущены проверки PGP для {0} пакетов из репозиториев: {1}"
 
-#: base/transaction.cpp:1426
+#: base/transaction.cpp:1422
 #, fuzzy
 #| msgid "Warning: skipped PGP checks for {0} packages from repository: {1}"
 #| msgid_plural ""
@@ -975,13 +975,13 @@ msgstr ""
 msgid "Cannot download the \"{0}\" package, cacheonly option is activated."
 msgstr "Невозможно загрузить пакет \"{0}\", активирована опция \"cacheonly\"."
 
-#: repo/package_downloader.cpp:219
+#: repo/package_downloader.cpp:231
 #, fuzzy
 #| msgid "Failed to download files"
 msgid "Already downloaded"
 msgstr "Не удалось загрузить файлы"
 
-#: repo/package_downloader.cpp:267
+#: repo/package_downloader.cpp:279
 msgid "Failed to download packages"
 msgstr "Не удалось загрузить пакеты"
 
@@ -1007,7 +1007,7 @@ msgstr ""
 msgid "Repository \"{}\" has unsupported type \"{}\", skipping."
 msgstr "Репозиторий \"{}\" имеет неподдерживаемый тип \"{}\", пропуск."
 
-#: repo/repo.cpp:221 repo/repo.cpp:241 repo/repo_sack.cpp:372
+#: repo/repo.cpp:221 repo/repo.cpp:241 repo/repo_sack.cpp:368
 #, fuzzy
 #| msgid "Failed to download metadata ({}: \"{}\") for repository \"{}\""
 msgid "Failed to download metadata ({}: \"{}\") for repository \"{}\": {}"
@@ -1104,7 +1104,7 @@ msgstr ""
 "Не удалось создать репозиторий \"{}\": Идентификатор присутствует в "
 "конфигурации более одного раза"
 
-#: repo/repo_sack.cpp:635
+#: repo/repo_sack.cpp:631
 msgid "Cache-only enabled but no cache for repository \"{}\""
 msgstr "Включено только кэширование, но нет кэша для репозитория \"{}\""
 

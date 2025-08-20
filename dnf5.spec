@@ -1,6 +1,6 @@
 %global project_version_prime 5
 %global project_version_major 2
-%global project_version_minor 14
+%global project_version_minor 16
 %global project_version_micro 0
 
 %bcond dnf5_obsoletes_dnf %[0%{?fedora} > 40 || 0%{?rhel} > 10]
@@ -785,6 +785,7 @@ Package management service with a DBus interface.
 Summary:        Polkit rule to allow wheel group members install trusted packages
 License:        GPL-2.0-or-later
 Requires:       polkit
+Requires:       dnf5daemon-server = %{version}-%{release}
 BuildArch:      noarch
 
 %description -n dnf5daemon-server-polkit
@@ -1022,6 +1023,12 @@ mkdir -p %{buildroot}%{_libdir}/libdnf5/plugins
 %ldconfig_scriptlets
 
 %changelog
+* Thu Aug 07 2025 Packit Team <hello@packit.dev> - 5.2.16.0-1
+- New upstream release 5.2.16.0
+
+* Fri Jul 11 2025 Packit Team <hello@packit.dev> - 5.2.15.0-1
+- New upstream release 5.2.15.0
+
 * Fri Jun 20 2025 Packit Team <hello@packit.dev> - 5.2.14.0-1
 - New upstream release 5.2.14.0
 

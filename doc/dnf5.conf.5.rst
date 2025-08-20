@@ -191,7 +191,7 @@ repository configuration file should aside from repo ID consists of baseurl, met
 ``destdir``
     :ref:`string <string-label>`
 
-    Redirect downloaded packages to provided directory.
+    Redirect downloaded packages to provided directory. If set, packages downloaded to this directory are not automatically removed after the next successful transaction. To redirect the download location while allowing DNF5 to manage downloaded packages, use the :ref:`cachedir <cachedir_options-label>` option.
 
     Default: <package repository :ref:`cachedir <cachedir_options-label>`>/packages
 
@@ -538,7 +538,7 @@ repository configuration file should aside from repo ID consists of baseurl, met
 
     For superuser overwrites the :ref:`cachedir <cachedir_options-label>` option value.
 
-    Allows to differentiate user and superuser cachedir.
+    Allows one to differentiate user and superuser cachedir.
 
     Default: ``/var/cache/libdnf5``.
 

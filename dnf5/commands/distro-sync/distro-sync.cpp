@@ -19,6 +19,8 @@ along with libdnf.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "distro-sync.hpp"
 
+#include "../from_repo.hpp"
+
 #include <dnf5/shared_options.hpp>
 #include <libdnf5/conf/option_string.hpp>
 #include <libdnf5/utils/bgettext/bgettext-lib.h>
@@ -53,6 +55,9 @@ void DistroSyncCommand::set_argument_parser() {
     allow_erasing = std::make_unique<AllowErasingOption>(*this);
     auto skip_broken = std::make_unique<SkipBrokenOption>(*this);
     auto skip_unavailable = std::make_unique<SkipUnavailableOption>(*this);
+    create_installed_from_repo_option(*this, installed_from_repos, true);
+    create_from_repo_option(*this, from_repos, true);
+    create_destdir_option(*this);
     create_downloadonly_option(*this);
     create_offline_option(*this);
     create_store_option(*this);
@@ -62,17 +67,27 @@ void DistroSyncCommand::configure() {
     auto & context = get_context();
     context.set_load_system_repo(true);
     context.set_load_available_repos(Context::LoadAvailableRepos::ENABLED);
+
+    if (!context.get_base().get_config().get_destdir_option().empty()) {
+        context.get_base().get_config().get_downloadonly_option().set(true);
+    }
 }
 
 void DistroSyncCommand::run() {
     auto goal = get_context().get_goal();
     goal->set_allow_erasing(allow_erasing->get_value());
+    auto settings = libdnf5::GoalJobSettings();
+    settings.set_from_repo_ids(installed_from_repos);
     if (patterns_to_distro_sync_options->empty()) {
-        goal->add_rpm_distro_sync();
+        goal->add_rpm_distro_sync(settings);
     } else {
+        // The "--from-repo" option only applies to packages explicitly listed on the command line.
+        // Other packages can be used from any enabled repository.
+        settings.set_to_repo_ids(from_repos);
+
         for (auto & pattern : *patterns_to_distro_sync_options) {
             auto option = dynamic_cast<libdnf5::OptionString *>(pattern.get());
-            goal->add_rpm_distro_sync(option->get_value());
+            goal->add_rpm_distro_sync(option->get_value(), settings);
         }
     }
 }

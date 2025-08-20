@@ -50,7 +50,7 @@ are considered correct, the resulting package is picked simply by lexicographica
 
 When installing groups defined in ``group-spec`` arguments, ``DNF5`` ensures that the groups and
 their packages are installed on the system. Installs only group packages matching configured package
-type. See :manpage:`dnf5-conf(5)`, :ref:`group_package_types <group_package_types_options-label>`.
+type. See :manpage:`dnf5.conf(5)`, :ref:`group_package_types <group_package_types_options-label>`.
 
 When installing environments defined in ``environment-spec`` arguments, ``DNF5`` ensures that the
 environments and their groups are installed on the system.
@@ -75,6 +75,8 @@ Options
     | Disable downgrade of dependencies when resolving the requested operation.
 
 .. include:: ../_shared/options/from-repo.rst
+
+.. include:: ../_shared/options/destdir.rst
 
 ``--downloadonly``
     | Download the resolved package set without executing an RPM transaction.
@@ -114,6 +116,9 @@ Examples
 
 ``dnf5 install --advisory=FEDORA-2022-07aa56297a \*``
     | Install all the packages that belong to the ``FEDORA-2022-07aa56297a`` advisory.
+
+``dnf5 install --destdir /tmp/my_packages vim``
+    | Download the ``vim`` package and its dependencies to ``/tmp/my_packages`` directory without installing.
 
 
 See Also

@@ -58,7 +58,9 @@ void ReinstallCommand::set_argument_parser() {
     auto skip_broken = std::make_unique<SkipBrokenOption>(*this);
     auto skip_unavailable = std::make_unique<SkipUnavailableOption>(*this);
     create_allow_downgrade_options(*this);
+    create_installed_from_repo_option(*this, installed_from_repos, true);
     create_from_repo_option(*this, from_repos, true);
+    create_destdir_option(*this);
     create_downloadonly_option(*this);
     create_offline_option(*this);
     create_store_option(*this);
@@ -68,12 +70,17 @@ void ReinstallCommand::configure() {
     auto & context = get_context();
     context.set_load_system_repo(true);
     context.set_load_available_repos(Context::LoadAvailableRepos::ENABLED);
+
+    if (!context.get_base().get_config().get_destdir_option().empty()) {
+        context.get_base().get_config().get_downloadonly_option().set(true);
+    }
 }
 
 void ReinstallCommand::run() {
     auto goal = get_context().get_goal();
     goal->set_allow_erasing(allow_erasing->get_value());
     auto settings = libdnf5::GoalJobSettings();
+    settings.set_from_repo_ids(installed_from_repos);
     settings.set_to_repo_ids(from_repos);
     for (const auto & spec : pkg_specs) {
         goal->add_reinstall(spec, settings);

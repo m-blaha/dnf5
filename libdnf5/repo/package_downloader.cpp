@@ -21,6 +21,7 @@ along with libdnf.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "repo_downloader.hpp"
 #include "temp_files_memory.hpp"
+#include "utils/url.hpp"
 
 #include "libdnf5/base/base.hpp"
 #include "libdnf5/common/exception.hpp"
@@ -174,9 +175,30 @@ void PackageDownloader::download() try {
             continue;
         }
 
+        // Disable fastest_mirror callbacks for package downloading for now
+        // TODO(amatej): There is a problem in the API, libdnf5::repo::DownloadCallbacks::fastest_mirror interface
+        //               expects user_cb_data created by libdnf5::repo::DownloadCallbacks::add_new_download, these
+        //               are specific for each package download.
+        //               However librepo API allows setting fastest mirror callback data only per librepo handle and
+        //               we reuse one handle for all packages from given repository.
+        //               To resolve this we either have to create separate handle for each package (could be expensive)
+        //               or enhance LrPackageTarget with fastestmirror callback data (breaks librepo ABI).
+        auto & cached_handle = RepoDownloader::get_cached_handle(*pkg_target.package.get_repo());
+        cached_handle.set_opt(LRO_FASTESTMIRRORCB, NULL);
+        cached_handle.set_opt(LRO_FASTESTMIRRORDATA, NULL);
+
+        std::string encoded_location = pkg_target.package.get_location();
+        if (encoded_location.find("://") == std::string::npos) {
+            // TODO(mblaha): Here we rely on the fact that createrepo_c does not
+            // URL encode the package location. If we introduce URL encoding in
+            // createrepo_c in the future, we should also introduce a respective
+            // repository config option to let libdnf5 know whether the location
+            // is encoded to set the proper preserve_already_encoded flag value.
+            encoded_location = libdnf5::utils::url::url_path_encode(encoded_location, false);
+        }
         auto * lr_target = lr_packagetarget_new_v3(
-            RepoDownloader::get_cached_handle(*pkg_target.package.get_repo()).get(),
-            pkg_target.package.get_location().c_str(),
+            cached_handle.get(),
+            encoded_location.c_str(),
             pkg_target.destination.c_str(),
             static_cast<LrChecksumType>(pkg_target.package.get_checksum().get_type()),
             pkg_target.package.get_checksum().get_checksum().c_str(),

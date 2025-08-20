@@ -69,11 +69,10 @@ void UpgradeCommand::set_argument_parser() {
     allow_erasing = std::make_unique<AllowErasingOption>(*this);
     auto skip_unavailable = std::make_unique<SkipUnavailableOption>(*this);
     create_allow_downgrade_options(*this);
+    create_installed_from_repo_option(*this, installed_from_repos, true);
     create_from_repo_option(*this, from_repos, true);
     create_destdir_option(*this);
     create_downloadonly_option(*this);
-    auto & destdir = parser.get_named_arg("upgrade.destdir", false);
-    destdir.set_description(destdir.get_description() + " Automatically sets the --downloadonly option.");
     create_offline_option(*this);
 
     advisory_name = std::make_unique<AdvisoryOption>(*this);
@@ -126,7 +125,7 @@ void UpgradeCommand::run() {
         }
     }
 
-    settings.set_to_repo_ids(from_repos);
+    settings.set_from_repo_ids(installed_from_repos);
 
     auto advisories = advisory_query_from_cli_input(
         ctx.get_base(),
@@ -146,6 +145,10 @@ void UpgradeCommand::run() {
     if (pkg_specs.empty()) {
         goal->add_rpm_upgrade(settings, minimal->get_value());
     } else {
+        // The "--from-repo" option only applies to packages explicitly listed on the command line.
+        // Other packages can be used from any enabled repository.
+        settings.set_to_repo_ids(from_repos);
+
         for (const auto & spec : pkg_specs) {
             goal->add_upgrade(spec, settings, minimal->get_value());
         }

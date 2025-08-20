@@ -59,7 +59,7 @@ Subcommands
     Also include optional packages of the group if the ``--with-optional`` option is
     specified. By default all `Mandatory` and `Default` packages will be installed whenever
     possible. `Conditional` packages are installed if they meet their requirement. This can
-    be configured by :manpage:`dnf5-conf(5)`, :ref:`group_package_types <group_package_types_options-label>`.
+    be configured by :manpage:`dnf5.conf(5)`, :ref:`group_package_types <group_package_types_options-label>`.
 
     If the group is already (partially) installed, the command  installs the missing
     packages from the group.
@@ -131,6 +131,10 @@ Options for ``install``, ``remove`` and ``upgrade``
 
 ``--no-allow-downgrade``
     | Disable downgrade of dependencies when resolving the requested operation.
+    | Used with ``install`` and ``upgrade`` commands.
+
+``--destdir=<path>``
+    | Set directory used for downloading packages to. Default location is to the repository cache directory. Automatically sets the --downloadonly option.
     | Used with ``install`` and ``upgrade`` commands.
 
 ``--downloadonly``

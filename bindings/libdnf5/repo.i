@@ -1,5 +1,6 @@
 #if defined(SWIGPYTHON)
-%module(package="libdnf5", directors="1") repo
+%module("threads"=1, package="libdnf5", directors="1") repo
+%nothread;
 #elif defined(SWIGPERL)
 %module "libdnf5::repo"
 #elif defined(SWIGRUBY)
@@ -143,6 +144,7 @@ wrap_unique_ptr(DownloadCallbacksUniquePtr, libdnf5::repo::DownloadCallbacks);
 
 %include "libdnf5/repo/repo_weak.hpp"
 %template(RepoWeakPtr) libdnf5::WeakPtr<libdnf5::repo::Repo, false>;
+%typemap(out) libdnf5::WeakPtr<libdnf5::repo::Repo, false> & libdnf5::SetConstIterator<libdnf5::repo::RepoWeakPtr>::operator* = copy_return_value;
 %template(SetConstIteratorRepoWeakPtr) libdnf5::SetConstIterator<libdnf5::repo::RepoWeakPtr>;
 %template(SetRepoWeakPtr) libdnf5::Set<libdnf5::repo::RepoWeakPtr>;
 %template(SackQueryRepoWeakPtr) libdnf5::sack::Query<libdnf5::repo::RepoWeakPtr>;
@@ -153,6 +155,10 @@ wrap_unique_ptr(RepoCallbacksUniquePtr, libdnf5::repo::RepoCallbacks);
 
 %include "libdnf5/repo/repo_query.hpp"
 %template(SackRepoRepoQuery) libdnf5::sack::Sack<libdnf5::repo::Repo>;
+
+#if defined(SWIGPYTHON)
+%thread;
+#endif
 %include "libdnf5/repo/repo_sack.hpp"
 %template(RepoSackWeakPtr) libdnf5::WeakPtr<libdnf5::repo::RepoSack, false>;
 

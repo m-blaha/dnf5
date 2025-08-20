@@ -90,6 +90,7 @@ void DoCommand::set_argument_parser() {
         cmd.register_named_arg(item_type_opt);
     }
 
+    create_installed_from_repo_option(*this, installed_from_repos, false);
     create_from_repo_option(*this, from_repos, false);
 
     {
@@ -101,6 +102,7 @@ void DoCommand::set_argument_parser() {
                                        int argc,
                                        const char * const argv[]) {
             libdnf5::GoalJobSettings settings;
+            settings.set_from_repo_ids(installed_from_repos);
             settings.set_to_repo_ids(from_repos);
             switch (action) {
                 case Action::INSTALL:
@@ -171,6 +173,7 @@ void DoCommand::set_argument_parser() {
     advisory_enhancement = std::make_unique<EnhancementOption>(*this);
     advisory_newpackage = std::make_unique<NewpackageOption>(*this);
 
+    create_destdir_option(*this);
     create_downloadonly_option(*this);
     create_offline_option(*this);
     create_store_option(*this);
@@ -205,6 +208,10 @@ void DoCommand::configure() {
 
     context.set_load_available_repos(
         in_pkgs_count > 0 ? Context::LoadAvailableRepos::ENABLED : Context::LoadAvailableRepos::NONE);
+
+    if (!context.get_base().get_config().get_destdir_option().empty()) {
+        context.get_base().get_config().get_downloadonly_option().set(true);
+    }
 }
 
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-19 03:39+0000\n"
+"POT-Creation-Date: 2025-07-26 03:48+0000\n"
 "PO-Revision-Date: 2024-11-19 09:15+0000\n"
 "Last-Translator: A S Alam <aalam@users.noreply.translate.fedoraproject.org>\n"
 "Language-Team: Punjabi <https://translate.fedoraproject.org/projects/dnf5/"
@@ -24,12 +24,12 @@ msgid ""
 "advisory prefix \"{}\""
 msgstr ""
 
-#: base/goal.cpp:472
+#: base/goal.cpp:482
 msgid "Unsupported argument for REMOVE action: {}"
 msgstr "ਹਟਾਉਣ ਕਾਰਵਾਈ ਦੌਰਾਨ ਗ਼ੈਰਸਹਾਇਕ ਆਰਗੂਮੈਂਟ: {}"
 
 #. TODO(lukash) throw a proper exception
-#: base/goal.cpp:1641
+#: base/goal.cpp:1652
 msgid "Incorrect configuration value for multilib_policy: {}"
 msgstr ""
 
@@ -600,35 +600,35 @@ msgstr "ਪਬਲਿਕ ਕੁੰਜੀ ਇੰਪੋਰਟ ਕਰਨ ਲਈ ਫ�
 msgid "Invalid tsflag: {}"
 msgstr ""
 
-#: base/transaction.cpp:1318
+#: base/transaction.cpp:1314
 msgid "Public key \"{}\" is already present, not importing."
 msgstr ""
 
-#: base/transaction.cpp:1339
+#: base/transaction.cpp:1335
 msgid "An error occurred importing key \"{}\": {}"
 msgstr ""
 
-#: base/transaction.cpp:1373
+#: base/transaction.cpp:1369
 msgid "OpenPGP check for package \"{}\" ({}) from repo \"{}\" has failed: "
 msgstr ""
 
-#: base/transaction.cpp:1401
+#: base/transaction.cpp:1397
 msgid "Import of the key didn't help, wrong key?"
 msgstr ""
 
-#: base/transaction.cpp:1420
+#: base/transaction.cpp:1416
 msgctxt "It is a joining character for repositories IDs"
 msgid ", "
 msgstr ", "
 
-#: base/transaction.cpp:1423
+#: base/transaction.cpp:1419
 msgid "Warning: skipped OpenPGP checks for {0} package from repository: {1}"
 msgid_plural ""
 "Warning: skipped OpenPGP checks for {0} packages from repository: {1}"
 msgstr[0] ""
 msgstr[1] ""
 
-#: base/transaction.cpp:1426
+#: base/transaction.cpp:1422
 msgid "Warning: skipped OpenPGP checks for {0} package from repositories: {1}"
 msgid_plural ""
 "Warning: skipped OpenPGP checks for {0} packages from repositories: {1}"
@@ -893,13 +893,13 @@ msgstr ""
 msgid "Cannot download the \"{0}\" package, cacheonly option is activated."
 msgstr ""
 
-#: repo/package_downloader.cpp:219
+#: repo/package_downloader.cpp:231
 #, fuzzy
 #| msgid "Failed to download files"
 msgid "Already downloaded"
 msgstr "ਫਾਇਲਾਂ ਡਾਊਨਲੋਡ ਕਰਨ ਲਈ ਅਸਫ਼ਲ"
 
-#: repo/package_downloader.cpp:267
+#: repo/package_downloader.cpp:279
 msgid "Failed to download packages"
 msgstr "ਪੈਕੇਜ ਡਾਊਨਲੋਡ ਕਰਨ ਲਈ ਅਸਫ਼ਲ"
 
@@ -923,7 +923,7 @@ msgstr ""
 msgid "Repository \"{}\" has unsupported type \"{}\", skipping."
 msgstr ""
 
-#: repo/repo.cpp:221 repo/repo.cpp:241 repo/repo_sack.cpp:372
+#: repo/repo.cpp:221 repo/repo.cpp:241 repo/repo_sack.cpp:368
 msgid "Failed to download metadata ({}: \"{}\") for repository \"{}\": {}"
 msgstr ""
 
@@ -1004,7 +1004,7 @@ msgid ""
 "configuration"
 msgstr ""
 
-#: repo/repo_sack.cpp:635
+#: repo/repo_sack.cpp:631
 msgid "Cache-only enabled but no cache for repository \"{}\""
 msgstr ""
 
