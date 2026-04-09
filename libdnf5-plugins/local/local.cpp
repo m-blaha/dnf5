@@ -13,9 +13,13 @@
 #include <libdnf5/repo/repo_query.hpp>
 #include <sys/wait.h>
 
+#include <fstream>
+#include <set>
+
 
 constexpr const char * LOCAL_REPO_NAME{"_dnf_local"};
 constexpr const char * LOCATION_IN_PERSISTDIR{"plugins/local"};
+constexpr const char * GPGCHECK_SKIP_LIST{"gpgcheck_skip.list"};
 
 using namespace libdnf5;
 
@@ -64,7 +68,6 @@ public:
     void post_base_setup() override {
         Base & base = get_base();
         auto repo_sack = base.get_repo_sack();
-        auto repo = repo_sack->create_repo(LOCAL_REPO_NAME);
         if (config.has_option("main", "repodir")) {
             repodir = config.get_value("main", "repodir");
         } else {
@@ -72,6 +75,15 @@ public:
             repodir = base.get_config().get_persistdir_option().get_value();
             repodir = repodir / LOCATION_IN_PERSISTDIR;
         }
+
+        // Only create the repo if the directory already exists.
+        // The directory is created on first use in post_transaction().
+        // This avoids warnings about missing repodata (see issue #2581).
+        if (!std::filesystem::exists(repodir)) {
+            return;
+        }
+
+        auto repo = repo_sack->create_repo(LOCAL_REPO_NAME);
         repo->get_config().get_name_option().set("Local libdnf5 plugin repo");
         repo->get_config().get_baseurl_option().set("file://" + std::filesystem::absolute(repodir).string());
         repo->get_config().get_skip_if_unavailable_option().set(true);
@@ -79,24 +91,58 @@ public:
         repo->get_config().get_cost_option().set(500);
         // The repo should never be cached:
         // - Users expect the packages to be available in it right after running a transaction
-        // but this transaction would create a cache for the repo.
+        //   but this transaction would create a cache for the repo.
         // - The repo is usually local
-        base.get_config().get_metadata_expire_option().set(0);
+        repo->get_config().get_metadata_expire_option().set(0);
+
+        // Load per-package gpgcheck overrides for packages originally from
+        // repositories with pkg_gpgcheck disabled.
+        std::ifstream skip_list(repodir / GPGCHECK_SKIP_LIST);
+        if (skip_list.is_open()) {
+            std::string nevra;
+            while (std::getline(skip_list, nevra)) {
+                if (!nevra.empty()) {
+                    gpgcheck_skip.insert(nevra);
+                    repo->disable_pkg_gpgcheck(nevra);
+                }
+            }
+        }
     }
 
     void post_transaction(const libdnf5::base::Transaction & transaction) override {
-        std::filesystem::create_directories(repodir);
-
         bool need_rebuild = false;
+        bool skip_list_changed = false;
         for (auto & tspkg : transaction.get_transaction_packages()) {
             if (transaction_item_action_is_inbound(tspkg.get_action())) {
                 const auto & pkg = tspkg.get_package();
                 if (pkg.get_repo_id() == LOCAL_REPO_NAME) {
                     continue;
                 }
+                if (!need_rebuild) {
+                    std::filesystem::create_directories(repodir);
+                }
                 std::filesystem::copy(
                     pkg.get_package_path(), repodir, std::filesystem::copy_options::overwrite_existing);
                 need_rebuild = true;
+
+                // Track packages from repos with pkg_gpgcheck disabled
+                if (!pkg.get_repo()->is_pkg_gpgcheck_enabled(pkg.get_full_nevra())) {
+                    if (gpgcheck_skip.insert(pkg.get_full_nevra()).second) {
+                        skip_list_changed = true;
+                    }
+                } else {
+                    if (gpgcheck_skip.erase(pkg.get_full_nevra()) > 0) {
+                        skip_list_changed = true;
+                    }
+                }
+            }
+        }
+
+        // Write updated gpgcheck skip list
+        if (skip_list_changed) {
+            std::ofstream skip_list(repodir / GPGCHECK_SKIP_LIST);
+            for (const auto & nevra : gpgcheck_skip) {
+                skip_list << nevra << '\n';
             }
         }
 
@@ -133,6 +179,7 @@ public:
             // execvp expects null terminated array of arguments
             c_args.push_back(nullptr);
 
+            // TODO(mblaha): use libdnf5::utils::subprocess::run() instead of manual fork/exec
             int pipefd[2];
             if (pipe2(pipefd, O_CLOEXEC) == -1) {
                 throw SystemError(errno, M_("Local plugin: Cannot create pipe"));
@@ -207,6 +254,7 @@ public:
 private:
     libdnf5::ConfigParser & config;
     std::filesystem::path repodir;
+    std::set<std::string> gpgcheck_skip;
 };
 
 

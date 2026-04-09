@@ -22,9 +22,13 @@ The repository is automatically added by the plugin with the following options::
     cost = 500
     metadata_expire = 0
 
-Note that the repository has ``pkg_gpgcheck`` verification enabled by default but doesn't specify any ``gpgkey``, it assumes all required keys were already imported.
+The ``pkg_gpgcheck`` setting for the repository is inherited from the main
+configuration. The repository doesn't specify any ``gpgkey``, it assumes all
+required keys were already imported. Packages originally cached from
+repositories with ``pkg_gpgcheck`` disabled will have their OpenPGP signature
+verification skipped when served from the plugin repository.
 
-To generate the metedata `createrepo_c` is required.
+To generate the metadata `createrepo_c` is required.
 
 Configuration
 =============
