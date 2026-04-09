@@ -90,6 +90,10 @@ private:
     std::unique_ptr<SolvRepo> solv_repo;
     std::unique_ptr<repo::DownloadData> downloader;
 
+    // NEVRAs of packages in this repository for which OpenPGP signature
+    // verification is skipped
+    std::set<std::string> pkg_gpgcheck_disabled;
+
     WeakPtrGuard<Repo, false> data_guard;
 };
 
@@ -688,6 +692,23 @@ std::filesystem::path Repo::get_packages_download_dir() const {
     } else {
         return destdir_option.get_value();
     }
+}
+
+bool Repo::is_pkg_gpgcheck_enabled(const std::string & nevra) const {
+    if (get_type() == Type::COMMANDLINE) {
+        if (!p_impl->base->get_config().get_localpkg_gpgcheck_option().get_value()) {
+            return false;
+        }
+    } else {
+        if (!p_impl->config.get_pkg_gpgcheck_option().get_value()) {
+            return false;
+        }
+    }
+    return p_impl->pkg_gpgcheck_disabled.find(nevra) == p_impl->pkg_gpgcheck_disabled.end();
+}
+
+void Repo::disable_pkg_gpgcheck(const std::string & nevra) {
+    p_impl->pkg_gpgcheck_disabled.insert(nevra);
 }
 
 }  // namespace libdnf5::repo

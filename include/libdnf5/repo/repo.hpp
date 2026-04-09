@@ -307,6 +307,19 @@ public:
     /// @since 5.0
     libdnf5::BaseWeakPtr get_base() const;
 
+    /// Whether OpenPGP signature verification is enabled for a package from
+    /// this repo. Considers the repo-level (local)pkg_gpgcheck setting and any
+    /// per-package overrides set via disable_pkg_gpgcheck().
+    /// @param nevra The NEVRA string of the package.
+    /// @return true if OpenPGP signature should be verified, false otherwise.
+    bool is_pkg_gpgcheck_enabled(const std::string & nevra) const;
+
+    /// Disable OpenPGP signature verification for a specific package.
+    /// Packages marked this way will be skipped during signature verification
+    /// regardless of the repo-level pkg_gpgcheck setting.
+    /// @param nevra The NEVRA string of the package to skip.
+    void disable_pkg_gpgcheck(const std::string & nevra);
+
     /// Return string representation of the Type enum
     static std::string type_to_string(Type type);
 
