@@ -25,12 +25,14 @@
 #include "solv/pool.hpp"
 
 #include "libdnf5/base/base.hpp"
+#include "libdnf5/repo/file_downloader.hpp"
 #include "libdnf5/utils/bgettext/bgettext-mark-domain.h"
 #include "libdnf5/utils/fs/temp.hpp"
 #include "libdnf5/utils/to_underlying.hpp"
 
 extern "C" {
 #include <solv/chksum.h>
+#include <solv/knownid.h>
 #include <solv/repo_comps.h>
 #include <solv/repo_deltainfoxml.h>
 #include <solv/repo_repomdxml.h>
@@ -49,6 +51,8 @@ namespace fs = libdnf5::utils::fs;
 
 constexpr auto CHKSUM_TYPE = REPOKEY_TYPE_SHA256;
 constexpr const char * CHKSUM_IDENT = "H000";
+
+bool SolvRepo::suppress_stub_loading = false;
 
 
 static std::array<char, SOLV_USERDATA_SOLV_TOOLVERSION_SIZE> get_padded_solv_toolversion() {
@@ -780,6 +784,149 @@ void SolvRepo::create_group_solvable(const std::string & groupid, const libdnf5:
 
     repodata_internalize(data);
 }
+
+void SolvRepo::create_filelists_stub(const std::string & filelists_location_href) {
+    auto & logger = *base->get_logger();
+
+    if (filelists_location_href.empty()) {
+        logger.debug("No filelists location for repo \"{}\", skipping stub creation", config.get_id());
+        return;
+    }
+
+    // Create a new repodata entry to hold the REPOSITORY_EXTERNAL declaration
+    // following the pattern from libsolv examples/solv/repoinfo_type_rpmmd.c
+    Repodata * data = repo_add_repodata(repo, 0);
+    // The stub repodata_create_stubs() creates below only inherits a solvable
+    // range from `data` if `data->end > data->start` (see repodata_add_stub()
+    // in libsolv's repodata.c). Without this, the stub covers no solvables and
+    // is silently skipped by every dataiterator search, so it never loads.
+    repodata_extend_block(data, repo->start, repo->end - repo->start);
+    Id handle = repodata_new_handle(data);
+
+    repodata_set_poolstr(data, handle, REPOSITORY_REPOMD_TYPE, "filelists");
+    repodata_set_str(data, handle, REPOSITORY_REPOMD_LOCATION, filelists_location_href.c_str());
+
+    // Declare the keys this extension provides
+    repodata_add_idarray(data, handle, REPOSITORY_KEYS, SOLVABLE_FILELIST);
+    repodata_add_idarray(data, handle, REPOSITORY_KEYS, REPOKEY_TYPE_DIRSTRARRAY);
+
+    repodata_add_flexarray(data, SOLVID_META, REPOSITORY_EXTERNAL, handle);
+    repodata_internalize(data);
+
+    // Turn the REPOSITORY_EXTERNAL entry into a REPODATA_STUB
+    repodata_create_stubs(data);
+
+    // Mark the stub as a filelist extension so that the filtered search
+    // path in pool_addfileprovides_queue() skips it.  repodata_create_stubs()
+    // only sets this automatically when the source data has
+    // REPOSITORY_ADDEDFILEPROVIDES (written by rewrite_repo after a
+    // previous run), which our freshly created data does not have.
+    Repodata * stub = repo_id2repodata(repo, repo->nrepodata - 1);
+    if (stub) {
+        repodata_set_filelisttype(stub, REPODATA_FILELIST_EXTENSION);
+    }
+
+    logger.debug("Created filelists stub for repo \"{}\" (location: {})", config.get_id(), filelists_location_href);
+}
+
+
+bool SolvRepo::load_filelists_into_stub(Repodata * data) {
+    auto & logger = *base->get_logger();
+    auto & pool = get_rpm_pool(base);
+
+    auto * libdnf_repo = static_cast<Repo *>(repo->appdata);
+    if (!libdnf_repo) {
+        filelists_stub_load_failed = true;
+        return false;
+    }
+
+    auto & download_data = libdnf_repo->get_download_data();
+
+    // Check if filelists XML is already available locally (e.g. from cache)
+    std::string filelists_path = download_data.get_metadata_path(RepoDownloader::MD_FILENAME_FILELISTS);
+
+    if (filelists_path.empty()) {
+        // Filelists not yet downloaded — get the location from the stub metadata
+        const char * location = repodata_lookup_str(data, SOLVID_META, REPOSITORY_REPOMD_LOCATION);
+        if (!location || !*location) {
+            logger.warning("No filelists location in stub metadata for repo \"{}\"", config.get_id());
+            filelists_stub_load_failed = true;
+            return false;
+        }
+
+        std::string location_href(location);
+        std::string cachedir = libdnf_repo->get_cachedir();
+        std::filesystem::path dest_dir = std::filesystem::path(cachedir) / CACHE_METADATA_DIR;
+        std::filesystem::create_directories(dest_dir);
+
+        // Extract filename from the href (e.g. "repodata/xxx-filelists.xml.gz" -> "xxx-filelists.xml.gz")
+        std::filesystem::path href_path(location_href);
+        filelists_path = (dest_dir / href_path.filename()).string();
+
+        if (!std::filesystem::exists(filelists_path)) {
+            logger.info("Downloading filelists on-demand for repo \"{}\"", config.get_id());
+
+            try {
+                FileDownloader downloader(base);
+                auto repo_weak = libdnf_repo->get_weak_ptr();
+                downloader.add(repo_weak, location_href, filelists_path, nullptr, "filelists-" + config.get_id());
+                downloader.download();
+            } catch (const std::exception & e) {
+                logger.warning("Failed to download filelists for repo \"{}\": {}", config.get_id(), e.what());
+                filelists_stub_load_failed = true;
+                return false;
+            }
+        } else {
+            logger.debug("Using cached filelists for repo \"{}\"", config.get_id());
+        }
+    }
+
+    // Load the filelists XML into the stub repodata slot
+    logger.debug("Loading filelists extension for repo \"{}\" from \"{}\"", config.get_id(), filelists_path);
+
+    try {
+        utils::fs::File filelists_file(filelists_path, "r", true);
+
+        data->state = REPODATA_LOADING;
+        int res =
+            repo_add_rpmmd(repo, filelists_file.get(), "FL", REPO_USE_LOADING | REPO_EXTEND_SOLVABLES | REPO_LOCALPOOL);
+        if (res != 0) {
+            logger.warning("Failed to parse filelists for repo \"{}\": {}", config.get_id(), pool_errstr(*pool));
+            data->state = REPODATA_ERROR;
+            filelists_stub_load_failed = true;
+            return false;
+        }
+        data->state = REPODATA_AVAILABLE;
+
+        return true;
+    } catch (const std::exception & e) {
+        logger.warning("Failed to load filelists for repo \"{}\": {}", config.get_id(), e.what());
+        data->state = REPODATA_ERROR;
+        filelists_stub_load_failed = true;
+        return false;
+    }
+}
+
+
+int SolvRepo::pool_load_callback(Pool * /* pool */, Repodata * data, void * /* cbdata */) {
+    if (suppress_stub_loading) {
+        return 0;
+    }
+
+    if (!data->repo || !data->repo->appdata) {
+        return 0;
+    }
+
+    const char * repomd_type = repodata_lookup_str(data, SOLVID_META, REPOSITORY_REPOMD_TYPE);
+    if (!repomd_type || strcmp(repomd_type, "filelists") != 0) {
+        return 0;
+    }
+
+    auto * libdnf_repo = static_cast<Repo *>(data->repo->appdata);
+    auto & solv_repo = libdnf_repo->get_solv_repo();
+    return solv_repo.load_filelists_into_stub(data) ? 1 : 0;
+}
+
 
 void SolvRepo::create_environment_solvable(
     const std::string & environmentid, const libdnf5::system::EnvironmentState & state) {

@@ -320,6 +320,7 @@ public:
 private:
     class LIBDNF_LOCAL Impl;
     friend class RepoSack;
+    friend class SolvRepo;
     friend class rpm::Package;
     friend class rpm::PackageSack;
     friend class FileDownloader;

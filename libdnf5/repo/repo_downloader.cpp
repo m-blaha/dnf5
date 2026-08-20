@@ -534,6 +534,13 @@ LibrepoHandle & RepoDownloader::get_cached_handle(Repo & repo) {
     auto & donwload_data = repo.get_download_data();
     if (!donwload_data.handle) {
         donwload_data.handle = RepoDownloader::init_remote_handle(repo, nullptr, true);
+        // When metadata was loaded from cache (no download this session),
+        // the handle has metalink/mirrorlist URL set but not resolved to
+        // actual mirror URLs. lr_download() needs resolved mirrors.
+        std::string cachedir = donwload_data.config.get_cachedir();
+        donwload_data.handle->set_opt(LRO_DESTDIR, cachedir.c_str());
+        donwload_data.handle->set_opt(LRO_FETCHMIRRORS, 1L);
+        donwload_data.handle->perform();
     }
     apply_http_headers(donwload_data, *donwload_data.handle);
     return *donwload_data.handle;

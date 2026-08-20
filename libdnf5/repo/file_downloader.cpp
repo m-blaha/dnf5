@@ -48,18 +48,26 @@ public:
         RepoWeakPtr & repo,
         const std::string & url,
         const std::string & destination,
-        void * user_data)
+        void * user_data,
+        const std::string & description)
         : base(base),
           repo(repo),
           url(url),
           destination(destination),
-          user_data(user_data) {}
+          user_data(user_data),
+          description(description) {}
 
-    FileTarget(BaseWeakPtr & base, const std::string & url, const std::string & destination, void * user_data)
+    FileTarget(
+        BaseWeakPtr & base,
+        const std::string & url,
+        const std::string & destination,
+        void * user_data,
+        const std::string & description)
         : base(base),
           url(url),
           destination(destination),
-          user_data(user_data) {}
+          user_data(user_data),
+          description(description) {}
 
     ~FileTarget() {
         if (need_call_end_callback) {
@@ -74,6 +82,7 @@ public:
     std::string url;
     std::string destination;
     void * user_data;
+    std::string description;
     void * user_cb_data{nullptr};
     bool need_call_end_callback{false};
 };
@@ -135,12 +144,17 @@ FileDownloader::FileDownloader(Base & base) : p_impl(std::make_unique<Impl>(base
 FileDownloader::~FileDownloader() = default;
 
 void FileDownloader::add(
-    RepoWeakPtr & repo, const std::string & url, const std::string & destination, void * user_data) {
-    p_impl->targets.emplace_back(p_impl->base, repo, url, destination, user_data);
+    RepoWeakPtr & repo,
+    const std::string & url,
+    const std::string & destination,
+    void * user_data,
+    const std::string & description) {
+    p_impl->targets.emplace_back(p_impl->base, repo, url, destination, user_data, description);
 }
 
-void FileDownloader::add(const std::string & url, const std::string & destination, void * user_data) {
-    p_impl->targets.emplace_back(p_impl->base, url, destination, user_data);
+void FileDownloader::add(
+    const std::string & url, const std::string & destination, void * user_data, const std::string & description) {
+    p_impl->targets.emplace_back(p_impl->base, url, destination, user_data, description);
 }
 
 void FileDownloader::download() try {
@@ -171,8 +185,10 @@ void FileDownloader::download() try {
         }
 
         if (download_callbacks) {
+            const std::string & description =
+                file_target.description.empty() ? file_target.url : file_target.description;
             file_target.user_cb_data =
-                download_callbacks->add_new_download(file_target.user_data, file_target.url.c_str(), -1);
+                download_callbacks->add_new_download(file_target.user_data, description.c_str(), -1);
             file_target.need_call_end_callback = true;
         }
 

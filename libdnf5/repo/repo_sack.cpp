@@ -76,15 +76,23 @@ constexpr const char * STORED_TRANSACTION_NAME = "@stored_transaction";
 // TODO lukash: unused, remove?
 //constexpr const char * MODULE_FAIL_SAFE_REPO_NAME = "@modulefailsafe";
 
+
 void load_repos_common(libdnf5::BaseWeakPtr & base) {
     auto optional_metadata = base->get_config().get_optional_metadata_types_option().get_value();
-    if (!optional_metadata.contains(libdnf5::METADATA_TYPE_FILELISTS) &&
-        !optional_metadata.contains(libdnf5::METADATA_TYPE_ALL)) {
-        // Configures the pool_addfileprovides_queue() method to only add files from primary.xml.
-        // This ensures the method works correctly even if filelist.xml metadata are not loaded.
-        // When searching for file provides outside of primary.xml this flag incurs a big performance
-        // hit because libsolv has to go through all the files for each file provide therefore don't
-        // set it if filelists are loaded.
+    bool filelists_requested = optional_metadata.contains(libdnf5::METADATA_TYPE_FILELISTS) ||
+                               optional_metadata.contains(libdnf5::METADATA_TYPE_ALL);
+
+    if (!filelists_requested) {
+        // Filelists not requested upfront.  Register the pool load callback
+        // so libsolv can trigger on-demand filelists download + load via stubs.
+        auto & pool = libdnf5::get_rpm_pool(base);
+        pool_setloadcallback(*pool, libdnf5::repo::SolvRepo::pool_load_callback, nullptr);
+
+        // With ADDFILEPROVIDESFILTERED, pool_addfileprovides_queue() only
+        // handles standard file deps (/bin/*, /etc/*, …) from primary.
+        // Non-standard file deps are resolved on-demand via
+        // pool_whatprovides() → dataiterator, which triggers stub loading
+        // only when filelists data is actually needed.
         set_rpm_pool_flag(base, POOL_FLAG_ADDFILEPROVIDESFILTERED, 1);
     }
 

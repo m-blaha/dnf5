@@ -63,7 +63,13 @@ void PackageSack::Impl::make_provides_ready() {
     auto & pool = get_rpm_pool(base);
     libdnf5::solv::IdQueue addedfileprovides;
     libdnf5::solv::IdQueue addedfileprovides_inst;
+    // Suppress stub loading during pool_addfileprovides_queue() — its
+    // "remaining entries" search would trigger filelists downloads for ALL
+    // repos even when no file deps are needed for the transaction.
+    // Stubs will load on-demand during dep resolution instead.
+    repo::SolvRepo::suppress_stub_loading = true;
     pool_addfileprovides_queue(*pool, &addedfileprovides.get_queue(), &addedfileprovides_inst.get_queue());
+    repo::SolvRepo::suppress_stub_loading = false;
 
     if (base->get_repo_sack()->has_system_repo() && !addedfileprovides_inst.empty()) {
         auto system_repo = base->get_repo_sack()->get_system_repo();
@@ -75,7 +81,7 @@ void PackageSack::Impl::make_provides_ready() {
     if (!addedfileprovides.empty()) {
         auto rq = repo::RepoQuery(base);
         for (auto & repo : rq.get_data()) {
-            if (repo->is_loaded()) {
+            if (repo->is_loaded() && !repo->get_solv_repo().filelists_stub_load_failed) {
                 repo->get_solv_repo().rewrite_repo(addedfileprovides);
             }
         }

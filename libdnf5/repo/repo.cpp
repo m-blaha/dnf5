@@ -454,6 +454,17 @@ void Repo::load_available_repo() {
 
     if (all_metadata || optional_metadata.contains(libdnf5::METADATA_TYPE_FILELISTS)) {
         p_impl->solv_repo->load_repo_ext(RepodataType::FILELISTS, *p_impl->downloader.get());
+    } else {
+        // Filelists not requested — create a libsolv stub so they can be
+        // downloaded and loaded on-demand via the pool load callback.
+        std::string filelists_href;
+        for (auto & [type, href] : p_impl->downloader->metadata_locations) {
+            if (type == RepoDownloader::MD_FILENAME_FILELISTS) {
+                filelists_href = href;
+                break;
+            }
+        }
+        p_impl->solv_repo->create_filelists_stub(filelists_href);
     }
 
     if (all_metadata || optional_metadata.contains(libdnf5::METADATA_TYPE_OTHER)) {

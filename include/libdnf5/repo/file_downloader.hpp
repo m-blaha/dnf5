@@ -42,17 +42,24 @@ public:
     /// @param url The file (url) to download.
     /// @param destination The file path to which to download the file.
     /// @param user_data User data.
+    /// @param description Label shown in download progress reporting. Defaults to `url` when empty.
     void add(
         libdnf5::repo::RepoWeakPtr & repo,
         const std::string & url,
         const std::string & destination,
-        void * user_data = nullptr);
+        void * user_data = nullptr,
+        const std::string & description = "");
 
     /// Adds a file (URL) to download. The settings from ConfigMain passed in the FileDownloader constructor are used.
     /// @param url The file (url) to download.
     /// @param destination The file path to which to download the file.
     /// @param user_data User data.
-    void add(const std::string & url, const std::string & destination, void * user_data = nullptr);
+    /// @param description Label shown in download progress reporting. Defaults to `url` when empty.
+    void add(
+        const std::string & url,
+        const std::string & destination,
+        void * user_data = nullptr,
+        const std::string & description = "");
 
     /// Download the previously added files (URLs).
     void download();

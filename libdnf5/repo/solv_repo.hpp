@@ -75,6 +75,27 @@ public:
     void load_repo_ext(RepodataType type, const DownloadData & download_data);
     void load_repo_ext(RepodataType type, const std::string & in_type_name, const DownloadData & download_data);
 
+    /// Creates a repodata stub for filelists extension, enabling libsolv's
+    /// native lazy-loading mechanism.  When libsolv needs filelist data it
+    /// fires the pool load callback which downloads and loads filelists.
+    /// @param filelists_location_href  relative path from repomd (e.g. "repodata/…-filelists.xml.gz")
+    void create_filelists_stub(const std::string & filelists_location_href);
+
+    /// Called from the pool load callback to download (if needed) and load
+    /// filelists data into the given stub repodata slot.
+    /// @return true on success
+    bool load_filelists_into_stub(Repodata * data);
+
+    /// Pool load callback entry point — dispatches to the right SolvRepo.
+    /// Signature matches pool_setloadcallback requirements.
+    /// When suppress_stub_loading is true, the callback returns 0 immediately.
+    static int pool_load_callback(Pool * pool, Repodata * data, void * cbdata);
+
+    /// Flag passed as cbdata to pool_setloadcallback. When true, the callback
+    /// skips stub loading (used during pool_addfileprovides_queue to prevent
+    /// unconditional filelists downloads).
+    static bool suppress_stub_loading;
+
     /// Loads system repository into the pool.
     ///
     /// @param rootdir If empty, loads the installroot rpmdb, if not loads rpmdb from this root path
@@ -164,6 +185,8 @@ public:
     // Solvables for groups and environments are kept in separate pool. It means
     // we need also separate Repo object created in that pool.
     ::Repo * comps_repo{nullptr};
+
+    bool filelists_stub_load_failed{false};
 };
 
 }  // namespace libdnf5::repo
