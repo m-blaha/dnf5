@@ -1,0 +1,61 @@
+name: Team Workload & Unanswered Items Digest
+
+on:
+  schedule:
+    # Runs automatically at 08:00 AM UTC every Monday
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    # Allows manual on-demand triggers with an optional checkbox to test emails
+    inputs:
+      send_email:
+        description: 'Send email notification during this test run?'
+        type: boolean
+        default: false
+
+jobs:
+  generate-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # 1. Fetch data across target repos and save Markdown output
+      - name: Fetch GitHub Data & Generate Report
+        env:
+          GH_TOKEN: ${{ secrets.ORG_READ_TOKEN }}
+          # REQUIRED: Comma-separated list of target repositories (full path: owner/repo)
+          TARGET_REPOS: "rpm-software-management/dnf5, rpm-software-management/dnf"
+        run: |
+          python .github/scripts/fetch_unanswered_items.py > report.md
+
+      # 2. Render Markdown directly in GitHub Actions Summary UI for on-demand visibility
+      - name: Display Results in GitHub UI
+        run: |
+          cat report.md >> $GITHUB_STEP_SUMMARY
+
+      # 3. Convert MD to HTML (Only for Monday schedule OR if test email checkbox was checked)
+      - name: Convert Markdown to HTML for Email
+        if: github.event_name == 'schedule' || inputs.send_email == true
+        run: |
+          pip install markdown
+          python -c "import markdown; print(markdown.markdown(open('report.md').read(), extensions=['tables']))" > report.html
+
+      # 4. Deliver email report (Only for Monday schedule OR if test email checkbox was checked)
+      - name: Send Email Report
+        if: github.event_name == 'schedule' || inputs.send_email == true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Monday Morning Digest: Pending PRs, Issues & Discussions"
+          to: mblaha@redhat.com
+          from: GitHub Actions Bot
+          html_body: file://report.html
